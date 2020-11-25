@@ -38,7 +38,7 @@ function rainbow() {
 		var mappedVal = common.map_range(val, 0, 100, 50, 5);
 		if (typeof mappedVal === "number") {
 			RainbowSpeed = mappedVal;
-			console.log("New rainbow speed: " + RainbowSpeed);
+			//console.log("New rainbow speed: " + RainbowSpeed);
 		} else {
 			RainbowSpeed = 1000 / 30;
 		}

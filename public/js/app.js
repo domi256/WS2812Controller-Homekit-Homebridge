@@ -45,6 +45,24 @@ function StartXmas2() {
 }
 
 /*****************
+	Static Color
+*****************/
+
+function StartStaticColor() {
+	var args = {
+		Color: $("#StaticColor").val(),
+	};
+	console.log(args)
+	AnimationRequest("static", "ShowColor", args);
+}
+
+function UpdateBrightness() {
+	var args = {
+		Brightness: $("#staticbrightness").val(),
+	};
+	AnimationRequest("static", "SetBrightness", args);
+}
+/*****************
 	Fade
 *****************/
 

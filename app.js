@@ -27,10 +27,12 @@ var strip = require("./strip.js");
 /*  Animation Libraries */
 var xmas = require("./animations/xmas.js");
 var fade = require("./animations/fade.js");
+var static = require("./animations/static.js");
 var rainbow = require("./animations/rainbow.js");
 var control = require("./animations/control.js");
 var dance = require("./animations/dance.js");
 var twinkle = require("./animations/twinkle.js");
+const { brightness } = require("./strip.js");
 
 // Find the first local, ipv4 address
 // This is a 'best guess' that the web server can be accessed
@@ -40,13 +42,13 @@ var twinkle = require("./animations/twinkle.js");
 var interfaces = os.networkInterfaces();
 var localAddress = "";
 for (var k in interfaces) {
-    for (var k2 in interfaces[k]) {
-        var address = interfaces[k][k2];
-        if (address.family === 'IPv4' && !address.internal) {
+	for (var k2 in interfaces[k]) {
+		var address = interfaces[k][k2];
+		if (address.family === 'IPv4' && !address.internal) {
 			localAddress = address.address;
 			break;
-        }
-    }
+		}
+	}
 }
 
 /*****************
@@ -112,6 +114,88 @@ app.get("/admin/poweroff", function (req, res) {
 	require('child_process').exec('sudo poweroff', function (msg) { console.log("Issuing shutdown command.") });
 });
 
+/*****************
+	API
+*****************/
+
+/**
+ * Turn on LED Strip
+ */
+app.get("/api/v1/on", function (req, res) {
+	// switch led on
+	res.header("Access-Control-Allow-Origin", "*");
+	strip.On()
+	res.send("1")
+});
+
+/**
+ * Turn off LED-Strip
+ */
+app.get("/api/v1/off", function (req, res) {
+	// switch led off
+	res.header("Access-Control-Allow-Origin", "*");
+	strip.Off()
+	res.send("0")
+
+});
+
+/**
+ * Get status of LED-Strip
+ * @returns 0 if off
+ * @returns 1 if on
+ * 
+ */
+app.get("/api/v1/status", function (req, res) {
+	res.header("Access-Control-Allow-Origin", "*");
+	res.send(`${strip.GetStripStatus()}`)
+});
+
+/**
+ * Get Brightness of LED-Strip as float value between 0 and 1
+ * 0 is off 
+ * 1 is 100% on
+ * @returns float value with brightness between 0 and 1 
+ */
+app.get("/api/v1/brightness", function (req, res) {
+	res.header("Access-Control-Allow-Origin", "*");
+	let stripBrightness = strip.GetBrightness()
+	let calc = stripBrightness / 2.55
+	calc = Math.floor(calc)
+	res.send(`${calc}`)
+});
+
+/**
+ * Set Brightness of LED-Strip value 
+ * @valueOfBrightness value between 0 and 100
+ * @returns float between 0 and 1
+ */
+app.get("/api/v1/brightness/:valueOfBrightness", function (req, res) {
+	res.header("Access-Control-Allow-Origin", "*");
+	let reqBrightness = req.params.valueOfBrightness
+	if (reqBrightness === "0") {
+		strip.Off()
+		res.send("0")
+	} else {
+		let brightness_255 = Math.ceil(reqBrightness * 2.55)
+		//let brightness_response = (reqBrightness / 100)
+		strip.SetBrightness(brightness_255)
+		res.send(`${reqBrightness}`)
+	}
+});
+
+app.get("/api/v1/color", function (req, res) {
+	res.header("Access-Control-Allow-Origin", "*");
+	let color = strip.color
+	res.send(`${color}`)
+});
+
+app.get("/api/v1/color/:valueOfColor", function (req, res) {
+	res.header("Access-Control-Allow-Origin", "*");
+	let color = req.params.valueOfColor
+	let dec_color = parseInt(color, 16)
+	strip.SetStripColor(dec_color)
+	res.send(`${color}`)
+});
 
 /*****************
 	Common
@@ -124,6 +208,9 @@ app.get("/admin/poweroff", function (req, res) {
 function GetLibraryInstance(key) {
 	var lib = null;
 	switch (key) {
+		case "static":
+			lib = static;
+			break;
 		case "xmas":
 			lib = xmas;
 			break;
@@ -158,9 +245,9 @@ var server = app.listen(HTTP_PORT, function () {
 	console.log(" http://" + localAddress + ":" + HTTP_PORT);
 	console.log("***************************");
 
-	// Run the 'Rainbow' routing on startup
+	//Run the 'Rainbow' routing on startup
 	var rainbowInstance = GetLibraryInstance("rainbow");
 	if (rainbowInstance) {
-        	rainbowInstance.GoRainbow("", strip);
+		rainbowInstance.GoRainbow("", strip);
 	}
 });

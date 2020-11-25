@@ -49,9 +49,20 @@
 		<div class="tab-content clearfix">
 
 		<div class="tab-pane active" id="1a">
-			<h3>Welcome!</h3>
-			<p> Choose an option in the menu above. </p>
-		</div> <!-- ./tab-pane -->
+			<h3>Static Color!</h3>
+			<p> Use this mode to set static Color </p>
+			<button
+				class="jscolor {valueElement:StaticColor,value:'66ccff'} pull"
+				style="border:2px solid black">
+				Pick Color 
+			</button>
+			<input style="display:none;" id="StaticColor">
+			<br><br>
+			<div style="width:100%;text-align:center;">
+				<button class="btn btn-success" type="button" onclick="StartStaticColor();"> Apply </button>
+			</div> 
+			<br><br> Brightness: <input type="text" id="staticbrightness" name="staticbrightness" data-provide="slider" onchange="UpdateBrightness();" data-slider-min="1" data-slider-max="255" data-slider-step="1" data-slider-value="255" data-slider-tooltip="hide" >
+		</div> <!-- ./tab-pane Welcome -->
 
 		<div class="tab-pane" id="2a">
 			<div class="clearfix">&nbsp;</div>
@@ -64,7 +75,7 @@
 				</div>
 			</div>
 			</div>
-		</div> <!-- ./tab-pane -->
+		</div> <!-- ./tab-pane Rainbow-->
 
 		<div class="tab-pane" id="3a">
 			<div class="clearfix">&nbsp;</div>
@@ -84,7 +95,7 @@
 				<label>Warning!! This option will turn off the device.</label>
 			</div>
 			</div>
-		</div> <!-- ./tab-pane -->
+		</div> <!-- ./tab-pane Admin-->
 
 		<div class="tab-pane" id="4a">
 			<p> Use this mode to fade the strip between two colors </p>

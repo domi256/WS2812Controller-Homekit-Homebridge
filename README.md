@@ -6,15 +6,19 @@ This consists of a Node app which serves a simple HTML page to manage the strip 
 
 You can use it for WS2812 (NeoPixel) christmas lights, or other simple DIY applications. I used it for a couple applications, including Christmas Tree Lights and an artistic decorative dodecahedron.
 
-![cubeeee](./images/cube.jpg)
+Its also possible to integrate your LED-Strip to Homebridge. With that you can control the Strip via Apple Home App
+
+![hexaleaf](./images/hexaleaf.jpg)
 
 # Current Animations
 
-1.  Rainbow
+1.  Static Color
+	 - Set A Static Color and adjust the brightness
+2.  Rainbow
      - Cycle through all colors and pulse through strip.
-2.  Fade 2 Colors
+3.  Fade 2 Colors
      - Choose 2 colors and fade the strip between them.
-3. Dance
+4. Dance
    -  Each LED is rapidly moving through the color wheel, giving a 'disco' / 'dance' effect.
 5.  Starry Night
     -  Twinkling, white LED effects to simulate stars! :star:
@@ -30,15 +34,19 @@ Read this page.
 
 It led me to follow the instructions here at Adafruit: https://learn.adafruit.com/neopixels-on-raspberry-pi.
 
-Connect your raspi according to those instructions. I have been using my Pi's with a diode instead of the level converter, and they work well.
+I used a WS2812 and just connected it to a Raspberry Pi Zero W GPIO 18 and it worked.
 
 # Hardware
 
 - WS2812 (Neopixel) LED Light Strip or LEDs
 - Raspberry Pi 3 Model B, Raspberry Pi Zero, or Raspberry Pi Model B (other Raspberry Pis should work fine but are untested)
-- 5V 2A Power Supply
-- 1N4001 Diode (or equivalent) or a level converter. See https://learn.adafruit.com/neopixels-on-raspberry-pi/raspberry-pi-wiring. I used the diode method and connected it up like this:
-    -  ![pi-wiring](./images/led_strips_raspi_NeoPixel_Diode_bb.jpg)
+- 5V Power Supply
+
+```Note 
+- At 5V , each LED from WS2812b draws about 50mA when set to its full brightness. For 30 LEDs its 1.5A
+
+- I also powered my Raspberry Pi over the 5V Power Supply and it works fine.
+```
 
 # Connections
 
@@ -46,13 +54,17 @@ Connect your raspi according to those instructions. I have been using my Pi's wi
 2.  Connect GND (Physical pin 6) to the GND lead of your power supply.
     - Refer to this image for a layout of the raspi pins: https://www.element14.com/community/servlet/JiveServlet/previewBody/73950-102-11-339300/pi3_gpio.png
 
+Optional if you want to power your Rapsberry Pi also via the Powersupply: 
+3. Connect a Cable from the Power Supply V+ to the physical pin 2 of the Raspberry Pi. 
+3. Connect a Cable from the Power Supply V- to a ground pin of the Raspberry Pi. 
+
 # Devices
 
 Tested working on:
   1) Raspberry Pi 3 Model B
   2) Raspberry Pi Zero W (some slowness can occur)
      -  Pinout. I connected PSU ground to PIN6 (GND) and DATA to the LED strip on PIN12 (GPIO18)
-     -  ![pi-zero-pinout](./images/pi-zero-pinout.png)
+     -  ![pi-pinout](https://tutorials-raspberrypi.de/wp-content/uploads/2017/03/Raspberry-Pi-WS2812-Steckplatine.png)
      -  **Important** make sure that the power supply's ground is connected to a ground connection on the Pi.
   3) Raspberry Pi Model B (some slowness can occur)
 
@@ -96,38 +108,59 @@ Tested working on:
 	```
 
 # Running on Pi Startup
+Create a new File `/etc/systemd/system/<service>.service` replace <service> with your own service’s name) with the following content.
 
-There are many ways to accomplish this, but the one I went with was this:
+```
+[Unit]
+Description=WS2812b Controller with Homebride functionality
+After=network.target
+[Service]
+User=root
+WorkingDirectory=<path to your app>
+ExecStart=<app start command f.g. node app.js>
+Restart=always
+[Install]
+WantedBy=multi-user.target
+```
 
-1.  Define the command that will run your app.js file. In my case, this was:
-    -  `su pi -c 'sudo node /home/pi/code/github.com/WS2812Controller/app.js'`
-2.  Put this line in the `/etc/rc.local` file
-    -  `sudo nano /etc/rc.local`
-    -  Update the contents to add the command (above) that works for you. Mine looks like this (out of the box Raspbian configuration included):
-		```
-		#!/bin/sh -e
-		#
-		# rc.local
-		#
-		# This script is executed at the end of each multiuser runlevel.
-		# Make sure that the script will "exit 0" on success or any other
-		# value on error.
-		#
-		# In order to enable or disable this script just change the execution
-		# bits.
-		#
-		# By default this script does nothing.
+Then, reload systemd, enable the service and finally, start it.
 
-		# Print the IP address
-		_IP=$(hostname -I) || true
-		if [ "$_IP" ]; then
-		printf "My IP address is %s\n" "$_IP"
-		fi
+`$ sudo systemctl daemon-reload`
 
-		su pi -c 'sudo node /home/pi/code/github.com/WS2812Controller/app.js'
+`$ sudo systemctl enable <service>`
 
-		exit 0
-		```
+`$ sudo systemctl start <service>`
+
+# Homebridge / Homekit integration
+
+It is possible to control the Strip with the Apple Home App over Homebridge. 
+At first go to your Homebridge and install [homebridge-better-http-rgb](https://www.npmjs.com/package/homebridge-better-http-rgb)
+
+After installing this go to the Plugin Settings an configure your Strip.
+
+Example:
+
+```json 
+{
+    "accessory": "HTTP-RGB",
+    "name": "LED Strip",
+    "service": "Light",
+    "switch": {
+        "status": "http://<your_raspberrypi_ip>:8080/api/v1/status",
+        "powerOn": "http://<your_raspberrypi_ip>:8080/api/v1/on",
+        "powerOff": "http://<your_raspberrypi_ip>:8080/api/v1/off"
+    },
+    "color": {
+        "status": "http://<your_raspberrypi_ip>:8080/api/v1/color",
+        "url": "http://<your_raspberrypi_ip>:8080/api/v1/color/%s"
+    },
+    "brightness": {
+        "status": "http://<your_raspberrypi_ip>:8080/api/v1/brightness",
+        "url": "http://<your_raspberrypi_ip>:8080/api/v1/brightness/%s"
+    }
+}
+```
+
 
 # Security Note
 
@@ -135,4 +168,20 @@ There are many ways to accomplish this, but the one I went with was this:
 
 # Author
 
+Original Author: 
 Austin Brown [GitHub](https://github.com/luxdvie),  [austinbrown2500@gmail.com](mailto:austinbrown2500@gmail.com)
+
+Author for AddOns (Homebridge, etc): 
+Dominic Rösch [GitHub](https://github.com/domi256), [256domi@googlemail.com](mailto:256domi@googlemail.com)
+
+
+
+
+# Legal Stuff
+
+Although already forbidden by the sources and subsequent licensing, it is not allowed to use or distribute this software for a commercial purpose.
+
+![apple-logo](https://camo.githubusercontent.com/6c4a93e5d42ff3ccd2a21d536a4e98b7957adcc92c756f078787dc0c70c2cceb/68747470733a2f2f66726565706e67696d672e636f6d2f7468756d622f6170706c655f6c6f676f2f32353336362d372d6170706c652d6c6f676f2d66696c652e706e67)
+HomeKit Accessory Protocol (HAP) is Apple’s proprietary protocol that enables third-party accessories in the home (e.g., lights, thermostats and door locks) and Apple products to communicate with each other. HAP supports two transports, IP and Bluetooth LE. The information provided in the HomeKit Accessory Protocol Specification (Non-Commercial Version) describes how to implement HAP in an accessory that you create for non-commercial use and that will not be distributed or sold.
+The HomeKit Accessory Protocol Specification (Non-Commercial Version) can be downloaded from the HomeKit Apple Developer page.
+Copyright © 2020 Apple Inc. All rights reserved.

@@ -6,8 +6,7 @@ var name = "control.js";
 
 function control() {
 	this.Stop = function (args, strip) {
-		strip.SetStripColor(0);
-		strip.Mode = "STOP";
+		strip.Off()
 		console.log("Stopped strip");
 	};
 }

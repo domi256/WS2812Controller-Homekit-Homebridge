@@ -77,7 +77,7 @@ function fader() {
 		var mappedVal = common.map_range(val, 0, 100, 10, 1);
 		if (typeof mappedVal === "number") {
 			FadeSpeed = mappedVal;
-			console.log("Updated fade speed: " + FadeSpeed);
+			//console.log("Updated fade speed: " + FadeSpeed);
 		} else {
 			FadeSpeed = 1000 / 30;
 		}
