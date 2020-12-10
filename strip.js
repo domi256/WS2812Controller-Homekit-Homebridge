@@ -23,7 +23,7 @@ function strip() {
 	 * Clear all LED's back to 0x00000 and render
 	 */
 	this.Off = function () {
-		this.SetStripColor(0);
+		this.SetBrightness(0);
 		this.Mode = "STOP";
 	};
 
@@ -43,19 +43,22 @@ function strip() {
 	 */
 	this.On = function () {
 		this.Mode = "On"
-		// if (this.brightness === 0) {
-		// 	this.brightness = 100;
-		// }
+		if (this.brightness === 0) {
+			this.brightness = 100;
+		}
 		// ws281x.setBrightness(this.brightness)
 		this.SetStripColor(this.color)
+		this.SetBrightness(this.brightness)
 	};
 
 	/**
 	 * Assign the brightness of the whole strip.
 	 */
 	this.SetBrightness = function (brightness) {
-		this.brightness = brightness
-		ws281x.setBrightness(brightness);
+		if (brightness || brightness === 0) {
+			this.brightness = brightness
+		}
+		ws281x.setBrightness(this.brightness);
 	};
 
 
